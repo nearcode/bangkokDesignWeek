@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Sound of Hua Lam Phong</title>
+  <!-- ใช้ Google Font Roboto -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <style>
+    /* ตั้งค่าฟอนต์และพื้นฐาน */
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: url('https://cdn.jsdelivr.net/gh/nearcode/Test1@44b4b3abb5fac017af54ac14f7555e8b25a328f8/Deep%20Space%20Bg.png') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ทุกหน้าจอ (artboard และ question-container) */
+    .artboard,
+    .question-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .artboard.active,
+    .question-container.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ปุ่มหลัก */
+    .btn {
+      padding: 12px 25px;
+      background: linear-gradient(145deg, #555, #333);
+      border: none;
+      border-radius: 30px;
+      margin: 10px;
+      cursor: pointer;
+      color: #fff;
+      font-size: 1em;
+      transition: background 0.3s ease, transform 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      text-decoration: none;
+    }
+    .btn:hover {
+      background: linear-gradient(145deg, #666, #444);
+      transform: translateY(-3px);
+    }
+
+    /* สำหรับตัวเลือกที่เป็นรูปภาพเท่านั้น */
+    .option {
+      cursor: pointer;
+      margin: 10px;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .option:hover {
+      opacity: 0.85;
+      transform: scale(1.02);
+    }
+
+    /* รูปภาพ */
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 8px;
+    }
+
+    /* ฟอร์มลงทะเบียน */
+    .form-container {
+      width: 100%;
+      max-width: 500px;
+      text-align: left;
+      margin: 0 auto;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      font-size: 1em;
+      margin-bottom: 8px;
+    }
+    /* กรอบของ input และ select (คงขนาดเดิม) */
+    input[type="text"],
+    select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 25px;
+      border: none;
+      background-color: #444;
+      color: #fff;
+      font-size: 1em;
+      box-sizing: border-box;
+    }
+    input[type="text"]:focus,
+    select:focus {
+      outline: none;
+      background-color: #555;
+    }
+    /* สำหรับ textarea ของข้อเขียน */
+    .input-answer {
+      padding: 10px;
+      width: 100%;
+      max-width: 500px;
+      border-radius: 15px;
+      border: none;
+      background-color: #444;
+      color: #fff;
+      font-size: 1em;
+      box-sizing: border-box;
+      min-height: 100px;
+    }
+
+    /* ข้อความเตือนในฟอร์ม (สำหรับฟอร์มลงทะเบียน) */
+    #errorMsg {
+      color: #ff6b6b;
+      margin-bottom: 15px;
+      font-size: 0.95em;
+      text-align: center;
+    }
+    /* ข้อความเตือนสำหรับข้อเขียน */
+    .error-msg {
+      color: #ff6b6b;
+      font-size: 0.9em;
+      margin-bottom: 10px;
+      text-align: center;
+      min-height: 18px;
+    }
+
+    /* สไตล์สำหรับ PDPA Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.5s ease;
+    }
+    .modal.active {
+      display: flex;
+    }
+    .modal .modal-content {
+      background-color: #222;
+      padding: 25px;
+      border-radius: 15px;
+      max-width: 90%;
+      box-sizing: border-box;
+    }
+    .modal .modal-content h2 {
+      margin-top: 0;
+      font-size: 1.5em;
+      margin-bottom: 10px;
+    }
+    .modal .modal-content p {
+      font-size: 1em;
+      line-height: 1.4;
+      margin-bottom: 20px;
+    }
+
+    /* (ส่วนนี้เดิมสำหรับปุ่มแชร์ ถูกแทนที่ด้วยปุ่มดาวน์โหลดแล้ว) */
+    .share-container {
+      margin-top: 20px;
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+    .share-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #555;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+    .share-btn:hover {
+      background-color: #666;
+      transform: scale(1.1);
+    }
+    .share-btn img {
+      width: 24px;
+      height: 24px;
+      display: block;
+    }
+  </style>
+</head>
+<body id="mainBody">
+  <!-- PDPA Modal Popup -->
+  <div id="pdpaModal" class="modal">
+    <div class="modal-content">
+      <h2>คำเตือนเกี่ยวกับการคุ้มครองข้อมูลส่วนบุคคล (PDPA)</h2>
+      <p>
+        ตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล (PDPA) ข้อมูลส่วนบุคคลของคุณจะถูกจัดเก็บและใช้เพื่อวัตถุประสงค์ในการติดต่อสื่อสารและดำเนินงานกิจกรรมนี้เท่านั้น<br>
+        โดยจะไม่มีการนำข้อมูลไปเผยแพร่หรือใช้เพื่อวัตถุประสงค์อื่นโดยไม่ได้รับความยินยอมจากคุณ<br>
+        คุณมีสิทธิ์เข้าถึง แก้ไข หรือขอให้ลบข้อมูลส่วนบุคคลของคุณตลอดเวลา
+      </p>
+      <button class="btn" onclick="confirmPDPA()">ยืนยัน</button>
+    </div>
+  </div>
+
+  <!-- หน้าแรก: เลือกช่องทางการเข้าร่วมงาน -->
+  <div id="imageScreen" class="artboard active">
+    <img src="https://cdn.jsdelivr.net/gh/nearcode/Test1@44b4b3abb5fac017af54ac14f7555e8b25a328f8/logo.png" alt="The Sound of Hua Lam Phong" style="max-width:300px;">
+    <p style="font-size:1.2em; margin-top:10px;">เลือกช่องทางในการเข้าร่วมงาน</p>
+    <div class="btn" onclick="submitChannel('online')">ONLINE</div>
+    <div class="btn" onclick="submitChannel('onsite')">ONSITE</div>
+  </div>
+
+  <!-- หน้าลงทะเบียน -->
+  <div id="artboard1" class="artboard">
+    <h2 style="margin-bottom:20px;">ลงทะเบียนเพื่อร่วมกิจกรรม</h2>
+    <form id="registrationForm" class="form-container">
+      <div class="form-group">
+        <label for="nickname">ชื่อเล่น</label>
+        <input type="text" id="nickname" placeholder="ชื่อเล่น" required>
+      </div>
+      <div class="form-group">
+        <label for="age">ช่วงอายุ</label>
+        <select id="age" required>
+          <option value="" disabled selected>เลือกช่วงอายุ</option>
+          <option value="below18">ต่ำกว่า 18 ปี</option>
+          <option value="18-25">18-25 ปี</option>
+          <option value="26-35">26-35 ปี</option>
+          <option value="36-45">36-45 ปี</option>
+          <option value="46-55">46-55 ปี</option>
+          <option value="above55">มากกว่า 55 ปี</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="gender">เพศ</label>
+        <select id="gender" required>
+          <option value="" disabled selected>เลือกเพศ</option>
+          <option value="male">ชาย</option>
+          <option value="female">หญิง</option>
+          <option value="lgbtq">LGBTQ+</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="province">จังหวัด</label>
+        <select id="province" required>
+          <option value="" disabled selected>เลือกจังหวัด</option>
+          <script>
+            const provinces = [
+              "กรุงเทพมหานคร", "กระบี่", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น",
+              "จันทบุรี", "ฉะเชิงเทรา", "ชลบุรี", "ชัยนาท", "ชัยภูมิ", "ชุมพร", "เชียงใหม่", "เชียงราย",
+              "ตรัง", "ตราด", "ตาก", "นครนายก", "นครปฐม", "นครพนม", "นครราชสีมา", "นครศรีธรรมราช",
+              "นครสวรรค์", "นนทบุรี", "นราธิวาส", "น่าน", "บึงกาฬ", "บุรีรัมย์", "ปทุมธานี",
+              "ประจวบคีรีขันธ์", "ปราจีนบุรี", "ปัตตานี", "พระนครศรีอยุธยา", "พะเยา", "พังงา", "พัทลุง",
+              "พิจิตร", "พิษณุโลก", "เพชรบุรี", "เพชรบูรณ์", "แพร่", "ภูเก็ต", "มหาสารคาม", "มุกดาหาร",
+              "แม่ฮ่องสอน", "ยะลา", "ยโสธร", "ร้อยเอ็ด", "ระนอง", "ระยอง", "ราชบุรี", "ลพบุรี",
+              "ลำปาง", "ลำพูน", "เลย", "ศรีสะเกษ", "สกลนคร", "สงขลา", "สตูล", "สมุทรปราการ",
+              "สมุทรสงคราม", "สมุทรสาคร", "สระแก้ว", "สระบุรี", "สิงห์บุรี", "สุโขทัย", "สุพรรณบุรี",
+              "สุราษฎร์ธานี", "สุรินทร์", "หนองคาย", "หนองบัวลำภู", "อ่างทอง", "อำนาจเจริญ",
+              "อุดรธานี", "อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี"
+            ];
+            provinces.forEach(province => {
+              document.write(`<option value="${province}">${province}</option>`);
+            });
+          </script>
+        </select>
+      </div>
+      <div id="errorMsg"></div>
+      <div class="form-group">
+        <button type="button" class="btn" onclick="submitRegistration()">ยืนยัน</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- คำถามแบบตัวเลือก (ปรับเป็น 5 ตัวเลือก) -->
+  <div id="question1" class="question-container">
+    <img src="Web/q1/_ ตั้งค่าฟอนต์และพื้นฐาน _.png" alt="คุณชอบอาหารประเภทไหน?" style="max-width:100%; height:auto; margin-bottom:20px;">
+    <div class="option" data-score="1" onclick="selectOption(this, 2)">
+      <img src="Web/q1/Frame 1.png" alt="Option A">
+    </div>
+    <div class="option" data-score="2" onclick="selectOption(this, 2)">
+      <img src="Web/q1/Frame 2.png" alt="Option B">
+    </div>
+    <div class="option" data-score="3" onclick="selectOption(this, 2)">
+      <img src="Web/q1/Frame 3.png" alt="Option C">
+    </div>
+    <div class="option" data-score="4" onclick="selectOption(this, 2)">
+      <img src="Web/q1/Frame 4.png" alt="Option D">
+    </div>
+    <div class="option" data-score="5" onclick="selectOption(this, 2)">
+      <img src="Web/q1/Frame 5.png" alt="Option E">
+    </div>
+  </div>
+
+  <div id="question2" class="question-container">
+    <img src="Web/q2/q2.png" alt="คุณชอบทำกิจกรรมอะไรในวันหยุด?" style="max-width:100%; height:auto; margin-bottom:20px;">
+    <div class="option" data-score="1" onclick="selectOption(this, 3)">
+      <img src="Web/q2/Frame 1.png" alt="Option A">
+    </div>
+    <div class="option" data-score="2" onclick="selectOption(this, 3)">
+      <img src="Web/q2/Frame 2.png" alt="Option B">
+    </div>
+    <div class="option" data-score="3" onclick="selectOption(this, 3)">
+      <img src="Web/q2/Frame 3.png" alt="Option C">
+    </div>
+    <div class="option" data-score="4" onclick="selectOption(this, 3)">
+      <img src="Web/q2/Frame 4.png" alt="Option D">
+    </div>
+    <div class="option" data-score="5" onclick="selectOption(this, 3)">
+      <img src="Web/q2/Frame 5.png" alt="Option E">
+    </div>
+  </div>
+
+  <div id="question3" class="question-container">
+    <img src="Web/q3/q3.png" alt="คุณชอบเดินทางไปที่ไหน?" style="max-width:100%; height:auto; margin-bottom:20px;">
+    <div class="option" data-score="1" onclick="selectOption(this, 4)">
+      <img src="Web/q3/Frame 1.png" alt="Option A">
+    </div>
+    <div class="option" data-score="2" onclick="selectOption(this, 4)">
+      <img src="Web/q3/Frame 2.png" alt="Option B">
+    </div>
+    <div class="option" data-score="3" onclick="selectOption(this, 4)">
+      <img src="Web/q3/Frame 3.png" alt="Option C">
+    </div>
+    <div class="option" data-score="4" onclick="selectOption(this, 4)">
+      <img src="Web/q3/Frame 4.png" alt="Option D">
+    </div>
+    <div class="option" data-score="5" onclick="selectOption(this, 4)">
+      <img src="Web/q3/Frame 5.png" alt="Option E">
+    </div>
+  </div>
+
+  <div id="question4" class="question-container">
+    <img src="Web/q4/q4.png" alt="คุณชอบกิจกรรมกลางแจ้งหรือในร่ม?" style="max-width:100%; height:auto; margin-bottom:20px;">
+    <div class="option" data-score="1" onclick="selectOption(this, 5)">
+      <img src="Web/q4/Frame 1.png" alt="Option A">
+    </div>
+    <div class="option" data-score="2" onclick="selectOption(this, 5)">
+      <img src="Web/q4/Frame 2.png" alt="Option B">
+    </div>
+    <div class="option" data-score="3" onclick="selectOption(this, 5)">
+      <img src="Web/q4/Frame 3.png" alt="Option C">
+    </div>
+    <div class="option" data-score="4" onclick="selectOption(this, 5)">
+      <img src="Web/q4/Frame 4.png" alt="Option D">
+    </div>
+    <div class="option" data-score="5" onclick="selectOption(this, 5)">
+      <img src="Web/q4/Frame 5.png" alt="Option E">
+    </div>
+  </div>
+
+  <!-- คำถามแบบเขียน -->
+  <div id="question5" class="question-container">
+    <img src="Web/q4/q5.png" alt="คำถามที่ 5" style="max-width:100%; height:auto; margin-bottom:20px;">
+    <textarea class="input-answer" id="comment1" placeholder="พิมพ์ความคิดเห็นของคุณที่นี่..."></textarea>
+    <div class="error-msg" id="errorMsg_comment1"></div>
+    <div class="btn" onclick="nextQuestionWithValidation(5, 'comment1', 6, 'errorMsg_comment1')">ถัดไป</div>
+  </div>
+
+  <div id="question6" class="question-container">
+    <img src="Web/q4/q6.png" alt="คำถามที่ 6" style="max-width:100%; height:auto; margin-bottom:20px;">
+    <textarea class="input-answer" id="comment2" placeholder="พิมพ์ความคิดเห็นของคุณที่นี่..."></textarea>
+    <div class="error-msg" id="errorMsg_comment2"></div>
+    <!-- เปลี่ยนปุ่มจาก "ถัดไป" เป็น "ส่งความคิดเห็น" และเรียก submitFeedback() -->
+    <div class="btn" onclick="submitFeedback()">ส่งความคิดเห็น</div>
+  </div>
+
+  <!-- หน้าสรุปผล -->
+  <div id="resultPage" class="artboard">
+    <h2>ปลายทางของคุณ</h2>
+    <img id="resultImage" src="" alt="ผลลัพธ์" style="max-width:80%; height:auto; margin-bottom:20px;">
+    <!-- แทนที่ปุ่มแชร์ด้วยปุ่มบันทึกรูปภาพ -->
+    <a id="downloadBtn" href="" download="result_image.png" class="btn">บันทึกรูปภาพ</a>
+  </div>
+
+  <script>
+    var totalScore = 0;
+    // ตัวแปรสำหรับเก็บข้อมูลชื่อและจังหวัดจากการลงทะเบียน
+    var userName = "";
+    var userProvince = "";
+
+    function submitChannel(channel) {
+      var current = document.getElementById("imageScreen");
+      current.classList.remove("active");
+      setTimeout(function() {
+        document.getElementById("pdpaModal").classList.add("active");
+      }, 500);
+    }
+    function confirmPDPA() {
+      document.getElementById("pdpaModal").classList.remove("active");
+      setTimeout(function() {
+        document.getElementById("artboard1").classList.add("active");
+      }, 500);
+    }
+    function submitRegistration() {
+      var nickname = document.getElementById("nickname").value;
+      var age = document.getElementById("age").value;
+      var gender = document.getElementById("gender").value;
+      var province = document.getElementById("province").value;
+      var errorMsg = document.getElementById("errorMsg");
+      if (nickname && age && gender && province) {
+        errorMsg.innerText = "";
+        // เก็บข้อมูลชื่อและจังหวัด
+        userName = nickname;
+        userProvince = province;
+        var current = document.getElementById("artboard1");
+        current.classList.remove("active");
+        setTimeout(function() {
+          document.getElementById("question1").classList.add("active");
+        }, 500);
+      } else {
+        errorMsg.innerText = "กรุณากรอกข้อมูลให้ครบถ้วน";
+      }
+    }
+    function selectOption(el, nextQuestionNumber) {
+      var score = parseInt(el.getAttribute("data-score"));
+      totalScore += score;
+      var currentQuestion = el.closest(".question-container");
+      if (currentQuestion) {
+        currentQuestion.classList.remove("active");
+      }
+      setTimeout(function() {
+        var nextQuestion = document.getElementById("question" + nextQuestionNumber);
+        if (nextQuestion) {
+          nextQuestion.classList.add("active");
+        }
+      }, 500);
+    }
+    function nextQuestionWithValidation(currentQuestionNumber, fieldId, nextQuestionNumber, errorId) {
+      var textField = document.getElementById(fieldId);
+      var errorElem = document.getElementById(errorId);
+      if (textField.value.trim() === "") {
+        errorElem.innerText = "กรุณาพิมพ์ข้อความของคุณ";
+        return;
+      } else {
+        errorElem.innerText = "";
+      }
+      var currentQuestion = document.getElementById("question" + currentQuestionNumber);
+      currentQuestion.classList.remove("active");
+      setTimeout(function() {
+        var nextQuestion = document.getElementById("question" + nextQuestionNumber);
+        if (nextQuestion) {
+          nextQuestion.classList.add("active");
+        }
+      }, 500);
+    }
+    function submitFeedback() {
+      var textField = document.getElementById("comment2");
+      var errorElem = document.getElementById("errorMsg_comment2");
+      if (textField.value.trim() === "") {
+        errorElem.innerText = "กรุณาพิมพ์ความคิดเห็นของคุณ";
+        return;
+      } else {
+        errorElem.innerText = "";
+      }
+      calculateResult();
+    }
+    function calculateResult() {
+      var resultImage = "";
+      // ปรับเกณฑ์คะแนนใหม่ สำหรับคำถามช้อยที่มีคะแนน 1-5 ใน 4 ข้อ (คะแนนเต็ม 20)
+      if (totalScore <= 7) {
+        resultImage = "untitled folder/ticket_1_-01.png";
+      } else if (totalScore <= 10) {
+        resultImage = "untitled folder/ticket_2_-02.png";
+      } else if (totalScore <= 13) {
+        resultImage = "untitled folder/ticket_3_-03.png";
+      } else if (totalScore <= 16) {
+        resultImage = "untitled folder/ticket_4_-04.png";
+      } else {
+        resultImage = "Layer 1.png";
+      }
+      var current = document.getElementById("question6");
+      current.classList.remove("active");
+      setTimeout(function() {
+        document.getElementById("resultImage").src = resultImage;
+        // ตั้งค่าให้ปุ่มดาวน์โหลดนำไปสู่รูปผลลัพธ์
+        document.getElementById("downloadBtn").href = resultImage;
+        // แสดงข้อมูลชื่อและจังหวัดที่ลงทะเบียนไว้
+        document.getElementById("resultPage").innerHTML += "<p>ชื่อ: " + userName + "<br>จังหวัด: " + userProvince + "</p>";
+        document.getElementById("resultPage").classList.add("active");
+      }, 500);
+    }
+  </script>
+</body>
+</html>
